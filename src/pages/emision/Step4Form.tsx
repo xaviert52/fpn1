@@ -12,7 +12,7 @@ export default function Step4Form() {
     ruc: '', razonSocial: '', cargo: 'Gerente General',
   });
 
-  const set = (k: string, v: string) => setForm({ ...form, [k]: v });
+  const set = (k: string, v: string) => setForm(prev => ({ ...prev, [k]: v }));
   const cities = ciudadesPorProvincia[form.provincia] || [];
 
   const basicValid = form.cedula.length === 10 && form.dactilar.length >= 1 && form.firstName && form.firstLastName && form.email && form.phone && form.provincia && form.ciudad && form.direccion;

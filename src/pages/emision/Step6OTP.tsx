@@ -3,10 +3,11 @@ import { motion } from 'framer-motion';
 import { Mail, Lock } from 'lucide-react';
 import { useEmisionStore } from '@/stores/useEmisionStore';
 import { demoUser } from '@/data/mockData';
+import { mockAdvanceEmissionStep } from '@/mocks/emisionBackendMock';
 import { toast } from 'sonner';
 
 export default function Step6OTP() {
-  const { setStep, setOtpVerified } = useEmisionStore();
+  const { setStepFromBackend, setOtpVerified, activeEmissionUuid, startEmission } = useEmisionStore();
   const [code, setCode] = useState<string[]>(Array(6).fill(''));
   const [loading, setLoading] = useState(false);
   const [countdown, setCountdown] = useState(299);
@@ -44,10 +45,12 @@ export default function Step6OTP() {
   const handleVerify = () => {
     if (!filled) return;
     setLoading(true);
-    setTimeout(() => {
+    setTimeout(async () => {
       setOtpVerified(true);
       toast.success('Código verificado correctamente');
-      setStep(7);
+      const emissionUuid = activeEmissionUuid ?? startEmission();
+      const response = await mockAdvanceEmissionStep({ emisionUuid: emissionUuid, nextStep: 7 });
+      setStepFromBackend(response, 7, emissionUuid);
     }, 1500);
   };
 

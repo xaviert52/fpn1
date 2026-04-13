@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Key, AlertTriangle, Info, Eye, EyeOff, Check, X } from 'lucide-react';
 import { useEmisionStore } from '@/stores/useEmisionStore';
+import { mockAdvanceEmissionStep } from '@/mocks/emisionBackendMock';
 import { toast } from 'sonner';
 
 const reqs = [
@@ -25,7 +26,7 @@ const levels = [
 ];
 
 export default function Step8Key() {
-  const { setStep, setCertificateKeySet } = useEmisionStore();
+  const { setStepFromBackend, setCertificateKeySet, activeEmissionUuid, startEmission } = useEmisionStore();
   const [pw, setPw] = useState('');
   const [confirm, setConfirm] = useState('');
   const [showPw, setShowPw] = useState(false);
@@ -41,10 +42,12 @@ export default function Step8Key() {
   const handleFinish = () => {
     if (!valid) return;
     setLoading(true);
-    setTimeout(() => {
+    setTimeout(async () => {
       setCertificateKeySet(true);
       toast.success('Certificado generado correctamente');
-      setStep(9);
+      const emissionUuid = activeEmissionUuid ?? startEmission();
+      const response = await mockAdvanceEmissionStep({ emisionUuid: emissionUuid, nextStep: 9 });
+      setStepFromBackend(response, 9, emissionUuid);
     }, 2500);
   };
 

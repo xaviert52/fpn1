@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useState, useRef, useEffect } from 'react';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { AnimatePresence, motion } from 'framer-motion';
+import { toast } from 'sonner';
 
 const breadcrumbMap: Record<string, string> = {
   '/dashboard': 'Inicio',
@@ -98,7 +99,12 @@ export default function Topbar() {
                 <User size={16} /> Mi Perfil
               </button>
               <button
-                onClick={() => { setMenuOpen(false); logout(); navigate('/login'); }}
+                onClick={async () => {
+                  setMenuOpen(false);
+                  await logout();
+                  toast.success('Sesion cerrada correctamente');
+                  navigate('/login');
+                }}
                 className="w-full px-4 py-2.5 text-left text-sm flex items-center gap-3 transition-colors hover:bg-white/5"
                 style={{ color: '#FF4C2B' }}
               >

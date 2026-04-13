@@ -2,12 +2,13 @@ import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Camera, Scan, CheckCircle } from 'lucide-react';
 import { useEmisionStore } from '@/stores/useEmisionStore';
+import { mockAdvanceEmissionStep } from '@/mocks/emisionBackendMock';
 import { toast } from 'sonner';
 
 type Phase = 'permission' | 'idle' | 'scanning' | 'done';
 
 export default function Step7Biometric() {
-  const { setStep, setBiometricVerified } = useEmisionStore();
+  const { setStepFromBackend, setBiometricVerified, activeEmissionUuid, startEmission } = useEmisionStore();
   const [phase, setPhase] = useState<Phase>('permission');
   const [scanProgress, setScanProgress] = useState(0);
   const [scanText, setScanText] = useState('');
@@ -46,7 +47,12 @@ export default function Step7Biometric() {
         setPhase('done');
         streamRef.current?.getTracks().forEach(t => t.stop());
         toast.success('Identidad verificada correctamente');
-        setTimeout(() => { setBiometricVerified(true); setStep(8); }, 1000);
+        setTimeout(async () => {
+          setBiometricVerified(true);
+          const emissionUuid = activeEmissionUuid ?? startEmission();
+          const response = await mockAdvanceEmissionStep({ emisionUuid: emissionUuid, nextStep: 8 });
+          setStepFromBackend(response, 8, emissionUuid);
+        }, 1000);
       }
     }, 50);
   };

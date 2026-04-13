@@ -16,6 +16,7 @@ interface GlassSelectProps {
 export default function GlassSelect({ value, onChange, options, placeholder = 'Selecciona...', disabled = false, className = '', icon }: GlassSelectProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLUListElement>(null);
   const [pos, setPos] = useState<{ top: number; left: number; width: number }>({ top: 0, left: 0, width: 0 });
 
   const updatePos = useCallback(() => {
@@ -40,11 +41,10 @@ export default function GlassSelect({ value, onChange, options, placeholder = 'S
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        const portal = document.getElementById('glass-select-portal');
-        if (portal && portal.contains(e.target as Node)) return;
-        setOpen(false);
-      }
+      const target = e.target as Node;
+      if (ref.current?.contains(target)) return;
+      if (dropdownRef.current?.contains(target)) return;
+      setOpen(false);
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
@@ -55,6 +55,7 @@ export default function GlassSelect({ value, onChange, options, placeholder = 'S
   const dropdown = open ? createPortal(
     <AnimatePresence>
       <motion.ul
+        ref={dropdownRef}
         initial={{ opacity: 0, y: -4, scaleY: 0.95 }}
         animate={{ opacity: 1, y: 0, scaleY: 1 }}
         exit={{ opacity: 0, y: -4, scaleY: 0.95 }}

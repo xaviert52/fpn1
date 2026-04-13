@@ -3,10 +3,11 @@ import { motion } from 'framer-motion';
 import { CreditCard, User, Calendar, Lock, ShieldCheck, Award } from 'lucide-react';
 import { useEmisionStore } from '@/stores/useEmisionStore';
 import { plans, IVA_RATE } from '@/data/mockData';
+import { mockAdvanceEmissionStep } from '@/mocks/emisionBackendMock';
 import { toast } from 'sonner';
 
 export default function Step3Payment() {
-  const { selectedPlan, setStep, setPaymentCompleted } = useEmisionStore();
+  const { selectedPlan, setStep, setStepFromBackend, setPaymentCompleted, activeEmissionUuid, startEmission } = useEmisionStore();
   const plan = plans.find(p => p.id === selectedPlan);
   const price = plan?.price || 12;
   const iva = price * IVA_RATE;
@@ -26,10 +27,12 @@ export default function Step3Payment() {
   const handlePay = () => {
     if (!valid) return;
     setLoading(true);
-    setTimeout(() => {
+    setTimeout(async () => {
       setPaymentCompleted(true);
       toast.success('✓ Pago procesado correctamente');
-      setStep(4);
+      const emissionUuid = activeEmissionUuid ?? startEmission();
+      const response = await mockAdvanceEmissionStep({ emisionUuid: emissionUuid, nextStep: 4 });
+      setStepFromBackend(response, 4, emissionUuid);
     }, 2000);
   };
 

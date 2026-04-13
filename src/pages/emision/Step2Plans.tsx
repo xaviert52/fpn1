@@ -1,7 +1,9 @@
 import { motion } from 'framer-motion';
 import { Clock, Check, ShieldCheck } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useEmisionStore } from '@/stores/useEmisionStore';
 import { plans, IVA_RATE } from '@/data/mockData';
+import { mockAdvanceEmissionStep } from '@/mocks/emisionBackendMock';
 
 const badgeColors: Record<string, string> = {
   'Más popular': 'var(--color-teal)',
@@ -10,7 +12,17 @@ const badgeColors: Record<string, string> = {
 };
 
 export default function Step2Plans() {
-  const { selectedPlan, setSelectedPlan, setStep } = useEmisionStore();
+  const navigate = useNavigate();
+  const { selectedPlan, setSelectedPlan, setStep, setStepFromBackend, activeEmissionUuid, startEmission } = useEmisionStore();
+
+  const handleContinue = async () => {
+    if (!selectedPlan) return;
+    const emissionUuid = activeEmissionUuid ?? startEmission();
+    const response = await mockAdvanceEmissionStep({ emisionUuid: emissionUuid, nextStep: 3 });
+    setStepFromBackend(response, 3, emissionUuid);
+    const resolvedUuid = response.result.process_uuid ?? emissionUuid;
+    navigate(`/emision/${resolvedUuid}`, { replace: true });
+  };
 
   return (
     <div className="max-w-5xl mx-auto">
@@ -64,7 +76,7 @@ export default function Step2Plans() {
 
       <div className="flex justify-center gap-4 mt-8">
         <button onClick={() => setStep(1)} className="btn-ghost px-8 h-[48px]">← Anterior</button>
-        <button onClick={() => selectedPlan && setStep(3)} disabled={!selectedPlan} className="btn-primary px-10 h-[52px]">Continuar →</button>
+        <button onClick={handleContinue} disabled={!selectedPlan} className="btn-primary px-10 h-[52px]">Continuar →</button>
       </div>
     </div>
   );

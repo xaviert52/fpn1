@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, Loader2, CheckCircle } from 'lucide-react';
 import { useEmisionStore } from '@/stores/useEmisionStore';
+import { mockAdvanceEmissionStep } from '@/mocks/emisionBackendMock';
 
 const checks = [
   { text: 'Conectando con el Registro Civil...', delay: 0 },
@@ -10,20 +11,42 @@ const checks = [
 ];
 
 export default function Step5Validation() {
-  const { setStep } = useEmisionStore();
+  const { setStepFromBackend, activeEmissionUuid, startEmission } = useEmisionStore();
   const [progress, setProgress] = useState(0);
   const [visibleChecks, setVisibleChecks] = useState(0);
 
   useEffect(() => {
+    let cancelled = false;
+    const checkTimeouts: number[] = [];
+    let transitionTimeout: number | undefined;
     const start = Date.now();
     const iv = setInterval(() => {
       const elapsed = Date.now() - start;
       setProgress(Math.min(elapsed / 3000 * 100, 100));
-      if (elapsed >= 3000) { clearInterval(iv); setTimeout(() => setStep(6), 400); }
+      if (elapsed >= 3000) {
+        clearInterval(iv);
+        transitionTimeout = window.setTimeout(async () => {
+          if (cancelled) return;
+          const emissionUuid = activeEmissionUuid ?? startEmission();
+          const response = await mockAdvanceEmissionStep({ emisionUuid: emissionUuid, nextStep: 6 });
+          if (cancelled) return;
+          setStepFromBackend(response, 6, emissionUuid);
+        }, 400);
+      }
     }, 50);
-    checks.forEach((_, i) => setTimeout(() => setVisibleChecks(i + 1), checks[i].delay));
-    return () => clearInterval(iv);
-  }, [setStep]);
+    checks.forEach((_, i) => {
+      checkTimeouts.push(window.setTimeout(() => {
+        if (cancelled) return;
+        setVisibleChecks(i + 1);
+      }, checks[i].delay));
+    });
+    return () => {
+      cancelled = true;
+      clearInterval(iv);
+      if (transitionTimeout !== undefined) window.clearTimeout(transitionTimeout);
+      checkTimeouts.forEach((id) => window.clearTimeout(id));
+    };
+  }, [activeEmissionUuid, setStepFromBackend, startEmission]);
 
   return (
     <motion.div

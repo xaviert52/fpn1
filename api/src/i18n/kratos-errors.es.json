@@ -1,0 +1,9 @@
+﻿{
+  "4000007": "Ya existe una cuenta con el mismo identificador (correo, telefono o usuario).",
+  "4000001": "El valor enviado no es valido.",
+  "4000002": "Falta informacion obligatoria en el formulario.",
+  "4000006": "Las credenciales no son correctas.",
+  "4000010": "La contrasena no cumple la politica de seguridad.",
+  "4000012": "El flujo expiro. Recarga la pagina e intenta de nuevo.",
+  "default": "No se pudo completar la validacion. Revisa los datos e intenta nuevamente."
+}

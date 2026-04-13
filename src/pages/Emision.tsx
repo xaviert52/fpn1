@@ -1,6 +1,9 @@
+import { useEffect } from 'react';
 import { useEmisionStore } from '@/stores/useEmisionStore';
 import { motion } from 'framer-motion';
+import { useNavigate, useParams } from 'react-router-dom';
 import Stepper from '@/components/Stepper';
+import { mockCreateOrResumeEmission } from '@/mocks/emisionBackendMock';
 import Step1PersonType from './emision/Step1PersonType';
 import Step2Plans from './emision/Step2Plans';
 import Step3Payment from './emision/Step3Payment';
@@ -24,7 +27,35 @@ const stepComponents: Record<number, React.ComponentType> = {
 };
 
 export default function Emision() {
-  const { currentStep } = useEmisionStore();
+  const navigate = useNavigate();
+  const { emisionUuid } = useParams<{ emisionUuid?: string }>();
+  const { currentStep, startEmission, setStepFromBackend, reset } = useEmisionStore();
+
+  useEffect(() => {
+    if (!emisionUuid) {
+      reset();
+      return;
+    }
+
+    let cancelled = false;
+
+    const syncEmission = async () => {
+      const response = await mockCreateOrResumeEmission(emisionUuid);
+      if (cancelled) return;
+
+      const uuid = response.payload.process_uuid;
+      startEmission(uuid);
+      setStepFromBackend(response, 1, uuid);
+
+      if (!emisionUuid || emisionUuid.toLowerCase() !== uuid) {
+        navigate(`/emision/${uuid}`, { replace: true });
+      }
+    };
+
+    syncEmission();
+    return () => { cancelled = true; };
+  }, [emisionUuid, navigate, reset, setStepFromBackend, startEmission]);
+
   const StepComponent = stepComponents[currentStep] || Step1PersonType;
 
   return (
